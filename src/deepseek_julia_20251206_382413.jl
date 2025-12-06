@@ -1,12 +1,13 @@
-# Import the necessary packages
-using Pkg
-Pkg.add(["ApproxFun", "SingularIntegralEquations"])
+# Using SingularIntegralEquations for singular integrals
 using ApproxFun, SingularIntegralEquations
 
-# Define the interval and the function space (Chebyshev polynomials on [-1, 1])
-x = Fun()
+# Define the domain and function space
+d = ChebyshevInterval()  # [-1, 1] interval
+S = JacobiWeight(0.5, 0.5, Chebyshev(d))  # Weighted Chebyshev space
+
 # Define a test function, e.g., f(t) = exp(t)
-f = exp(x)
+x = Fun(d)
+f = Fun(exp, S)
 
 # Define a point 'a' inside the interval at which to evaluate the integral
 a = 0.1
@@ -16,7 +17,12 @@ a = 0.1
 H = hilbert(f, a)
 println("Hilbert transform of exp(x) at x=$a: ", H)
 
-# Compute an integral with a logarithmic singularity (appears in fracture mechanics):
-# L(f)(a) = (1/π) * ∫_{-1}^{1} f(t) * log|t - a| dt
+# Compute an integral with a logarithmic singularity:
+# L(f)(a) = ∫_{-1}^{1} f(t) * log|t - a| dt
 L = logkernel(f, a)
 println("Log kernel integral of exp(x) at x=$a: ", L)
+
+# Compute the Stieltjes integral:
+# S(f)(a) = (1/π) * ∫_{-1}^{1} f(t) / (a - t) dt
+St = stieltjes(f, a)
+println("Stieltjes integral of exp(x) at x=$a: ", St)
