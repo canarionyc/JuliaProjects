@@ -1,0 +1,8 @@
+{
+    "julia.environmentPath": ".",
+    "julia.lint.run": true,
+    "[julia]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "julialang.language-julia"
+    }
+}
