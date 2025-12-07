@@ -1,4 +1,5 @@
 {
+    "julia.executablePath": "C:\\Julia-1.10.10\\bin\\julia.exe",
     "julia.environmentPath": ".",
     "julia.lint.run": true,
     "[julia]": {
