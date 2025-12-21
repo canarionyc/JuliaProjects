@@ -5,5 +5,6 @@
     "[julia]": {
         "editor.formatOnSave": true,
         "editor.defaultFormatter": "julialang.language-julia"
-    }
+    },
+    "terminal.integrated.shellIntegration.environmentReporting": true
 }
