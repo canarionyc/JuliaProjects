@@ -24,5 +24,5 @@ println("Log kernel integral of exp(x) at x=$a: ", L)
 
 # Compute the Stieltjes integral:
 # S(f)(a) = (1/π) * ∫_{-1}^{1} f(t) / (a - t) dt
-St = stieltjes(f, a)
+St = stieltjes(f, Complex(a))
 println("Stieltjes integral of exp(x) at x=$a: ", St)

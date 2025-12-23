@@ -40,3 +40,5 @@ Run with:
 ```bash
 julia src/hello.jl
 ```
+
+What do I have under C:\Users\Usuario\.julia?

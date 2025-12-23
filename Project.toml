@@ -1,3 +1,8 @@
 [deps]
 ApproxFun = "28f2ccd6-bb30-5033-b560-165f7b14dc2f"
+IntervalSets = "8197267c-284f-5f27-9208-e0e47529a953"
 SingularIntegralEquations = "e094c991-5a90-5477-8896-c1e4c9552a1a"
+
+[sources]
+ApproxFun = {rev = "master", url = "https://github.com/JuliaApproximation/ApproxFun.jl"}
+SingularIntegralEquations = {path = "SingularIntegralEquations"}
