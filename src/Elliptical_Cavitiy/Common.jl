@@ -1,7 +1,7 @@
 # Common.jl
 module Common
 
-using Plots
+using CairoMakie, Makie
 using LinearAlgebra
 using Printf
 
@@ -155,21 +155,40 @@ function plot_results(cav, mat, stress, φ_func, ψ_func; limit=3.0, res=200)
     min_stress = minimum(valid_stresses)
     max_stress = maximum(valid_stresses)
     clims_sigma = (min_stress, max_stress)
+    
+    clims_vm = (0, maximum(filter(!isnan, vm_grid))*0.8)
 
-    p1 = heatmap(xs, ys, σx_grid, title="Sigma X", color=:viridis, aspect_ratio=:equal, clims=clims_sigma)
-    p2 = heatmap(xs, ys, σy_grid, title="Sigma Y", color=:viridis, aspect_ratio=:equal, clims=clims_sigma, colorbar=false)
-    p3 = heatmap(xs, ys, vm_grid, title="Von Mises", color=:inferno, aspect_ratio=:equal, clims=(0, maximum(filter(!isnan, vm_grid))*0.8))
+    fig = Figure(size = (800, 900))
+
+    ax1 = Axis(fig[1, 1], aspect = DataAspect(), title = "Sigma X")
+    hm1 = heatmap!(ax1, xs, ys, σx_grid, colormap = :viridis, colorrange = clims_sigma)
+    
+    ax2 = Axis(fig[1, 2], aspect = DataAspect(), title = "Sigma Y")
+    heatmap!(ax2, xs, ys, σy_grid, colormap = :viridis, colorrange = clims_sigma)
+
+    ax3 = Axis(fig[2, 1], aspect = DataAspect(), title = "Von Mises")
+    hm3 = heatmap!(ax3, xs, ys, vm_grid, colormap = :inferno, colorrange = clims_vm)
+
+    # Hide the empty axis
+    ax4 = Axis(fig[2, 2], aspect = DataAspect())
+    hidedecorations!(ax4)
+    hidespines!(ax4)
+
+    Colorbar(fig[3, 1:2], hm1, label = "Normal Stress (σx, σy)", vertical = false, flipaxis = false)
+    Colorbar(fig[4, 1:2], hm3, label = "Von Mises Stress", vertical = false, flipaxis = false)
+
 
     # Draw the ellipse outline
     θ = range(0, 2π, length=100)
     el_x = cav.a0 .* cos.(θ)
     el_y = cav.b0 .* sin.(θ)
     
-    plot!(p1, el_x, el_y, line=(:white, 2), label="")
-    plot!(p2, el_x, el_y, line=(:white, 2), label="")
-    plot!(p3, el_x, el_y, line=(:white, 2), label="")
+    lines!(ax1, el_x, el_y, color=:white, linewidth=2)
+    lines!(ax2, el_x, el_y, color=:white, linewidth=2)
+    lines!(ax3, el_x, el_y, color=:white, linewidth=2)
 
-    plot(p1, p2, p3, layout=(2, 2), size=(900, 800))
+    return fig
 end
+
 
 end # module
