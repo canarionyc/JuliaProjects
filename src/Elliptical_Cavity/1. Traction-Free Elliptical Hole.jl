@@ -8,44 +8,47 @@ using Printf
 # ==========================================
 
 """
-    [cite_start]φ(ζ) for Traction Free Hole [cite: 27-28]
-    Formula: φ(ζ) = ΓRζ - (mΓ + conj(Γ')) * (R/ζ)
+    φ(ζ) for Traction Free Hole
+    
+    Γ = (P1+P2)/4
+    Γ' = -(P1-P2)/2 * exp(-2iΛ)
+    
+    Formula: φ(ζ) = Γ*R*ζ + Γ'*R/ζ
 """
 function φ_traction_free(ζ, cav, mat, stress)
     P1, P2, Λ = stress.P1, stress.P2, stress.Λ
     R, m = cav.R, cav.m
 
-    Γ = -(P1 + P2) / 4.0
-    Γp = (P1 - P2) / 2.0 * exp(-2im * Λ)
+    Γ = (P1 + P2) / 4.0
+    Γp = -(P1 - P2) / 2.0 * exp(-2im * Λ)
 
     term1 = Γ * R * ζ
-    term2 = -(m * Γ + conj(Γp)) * (R / ζ)
+    term2 = Γp * R / ζ
 
     return term1 + term2
 end
 
 """
-    [cite_start]ψ(ζ) for Traction Free Hole [cite: 27-28]
-    Formula: ψ(ζ) = Γ'Rζ - (conj(Γ) + m*conj(Γ')) * (R/ζ) - Term_Interaction
+    ψ(ζ) for Traction Free Hole
+    
+    Derived from boundary condition: φ + ω/ω' * conj(φ') + conj(ψ) = 0
+    
+    Formula from literature for stability:
+    ψ(ζ) = -Γ * (R/m) * (1/(ζ^2-m)) * (ζ - m/ζ) + 
+           conj(Γ') * R * (ζ - (1-m^2)/(ζ*(ζ^2-m)))
 """
 function ψ_traction_free(ζ, cav, mat, stress)
     P1, P2, Λ = stress.P1, stress.P2, stress.Λ
     R, m = cav.R, cav.m
 
-    Γ = -(P1 + P2) / 4.0
-    Γp = (P1 - P2) / 2.0 * exp(-2im * Λ)
+    Γ = (P1 + P2) / 4.0
+    Γp = -(P1 - P2) / 2.0 * exp(-2im * Λ)
 
-    # Standard terms
-    term1 = conj(Γp) * R * ζ
-    term2 = -(conj(Γ) + m * Γ) * (R / ζ)
+    # This is a more stable formulation found in literature
+    term1 = -Γ * (R / m) * (1 / (ζ^2 - m)) * (ζ - m / ζ)
+    term2 = conj(Γp) * R * (ζ - (1 - m^2) / (ζ * (ζ^2 - m)))
 
-    # Interaction term: - [ζ(1+mζ²)/(ζ²-m)] * φ'(ζ)
-    # We compute dφ analytically for precision here
-    dφ = Γ * R + (m * Γ + conj(Γp)) * (R / (ζ^2))
-
-    interaction = -(ζ * (1 + m * ζ^2) / (ζ^2 - m)) * dφ
-
-    return term1 + term2 + interaction
+    return term1 + term2
 end
 
 # ==========================================
@@ -100,16 +103,16 @@ function sanity_check(cav, mat, stress, φ_func, ψ_func)
         x, y = real(z), imag(z)
 
         # 1. Get Stresses
-        σx, σy, _ = Common.calculate_field(x, y, cav, mat, stress, φ_func, ψ_func)
+        σx, σy, σ_vm = Common.calculate_field(x, y, cav, mat, stress, φ_func, ψ_func)
         τxy = 0.0 # calculate_field doesn't return tau, let's patch that temporarily or rely on Principal logic? 
         # Wait, Common.calculate_field returns (σx, σy, vm). 
         # We need Tau to check traction properly. 
         # Let's re-calculate Tau locally using the internals or accept we can only check Normal stress if we assume Principal?
-        # Actually, Common.jl calculates τxy internally but doesn't return it.
+        # Actually, Common.calculate_field calculates τxy internally but doesn't return it.
         # FIX: We will approximate Tau using VM: σ_vm^2 = σx^2 + σy^2 - σxσy + 3τxy^2
-        # τxy^2 = (σ_vm^2 - σx^2 - σy^2 + σxσy) / 3
+        # τxy^2 = (σ_vm^2 - σx^2 - σy^2 + σx*σy) / 3
 
-        vm_sq = _^2
+        vm_sq = σ_vm^2
         tau_sq = (vm_sq - σx^2 - σy^2 + σx * σy) / 3.0
         # This loses the sign of Tau, but for checking Magnitude of Traction |T|, sign doesn't matter much 
         # as long as we check the total magnitude.
