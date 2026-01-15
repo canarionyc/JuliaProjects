@@ -394,31 +394,19 @@ function run_example()
     println("Calculating Fourier Coefficients for Case 1...")
     coeffs = calculate_coefficients(cavity, 1) # 1 for Normal
 
-    # Calculate stress along x-axis from x = a to x = 3a
-    println("Calculating Stresses along X-axis...")
-    xs = range(a0 + 0.01, 3 * a0, length=100) # Increased points for a smoother plot
+    # --- 1D Plotting along X-axis (as before) ---
+    println("Calculating Stresses along X-axis for 1D plot...")
+    xs_1d = range(a0, 3 * a0, length=100)
     sig_y_vals = Float64[]
     u_x_vals = Float64[]
-
-    for x in xs
+    
+    for x in xs_1d
         sx, sy, txy, ux, uy = solve_at_point(x, 0.0, cavity, material, stress, coeffs)
-        if !isnan(sy)
-            push!(sig_y_vals, sy)
-            push!(u_x_vals, ux)
-        else
-            # If a point is inside, we might get NaN. We should not add it to the plot.
-            # To keep arrays aligned, we could push NaN or just skip the x value.
-            # For simplicity, we'll just have shorter arrays if points are skipped.
-            # A better approach would be to filter `xs` itself.
-        end
-        @printf("x=%.2f: Sx=%.2f, Sy=%.2f, Ux=%.4f\n", x, sx, sy, ux)
+        push!(sig_y_vals, sy)
+        push!(u_x_vals, ux)
     end
 
-    # Filter xs to match the length of results in case of NaNs
-    valid_xs = xs[1:length(sig_y_vals)]
-
-    # Generate Plots
-    p1 = plot(valid_xs, sig_y_vals,
+    p_stress_1d = plot(xs_1d ./ a0, sig_y_vals ./ P1,
         label="σy / P1",
         xlabel="x / a0",
         ylabel="Stress Concentration",
@@ -426,8 +414,7 @@ function run_example()
         lw=2)
     hline!([stress.P2 / stress.P1], linestyle=:dash, label="P2/P1 (Far-field)")
 
-
-    p2 = plot(valid_xs, u_x_vals ./ a0, # Normalizing displacement
+    p_disp_1d = plot(xs_1d ./ a0, u_x_vals ./ a0,
         label="ux / a0",
         xlabel="x / a0",
         ylabel="Normalized Displacement",
@@ -435,9 +422,58 @@ function run_example()
         lw=2,
         color=:red)
 
-    # Combine and display
-    plot(p1, p2, layout=(2, 1), legend=:best)
+    plot_1d = plot(p_stress_1d, p_disp_1d, layout=(2, 1), legend=:best)
+    display(plot_1d)
+    println("1D plots displayed. Now generating 2D field plots...")
 
-end
+    # --- 2D Field Plotting ---
+    grid_res = 100
+    lim = 2.5 * a0
+    xs_2d = range(-lim, lim, length=grid_res)
+    ys_2d = range(-lim, lim, length=grid_res)
 
+    sigma_vm = zeros(grid_res, grid_res)
+    disp_mag = zeros(grid_res, grid_res)
+
+    for (i, y) in enumerate(ys_2d), (j, x) in enumerate(xs_2d)
+        sx, sy, txy, ux, uy = solve_at_point(x, y, cavity, material, stress, coeffs)
+        
+        if isnan(sx)
+            sigma_vm[i, j] = NaN
+            disp_mag[i, j] = NaN
+        else
+            # Von Mises Stress
+            sigma_vm[i, j] = sqrt(sx^2 - sx*sy + sy^2 + 3*txy^2)
+            # Displacement Magnitude
+            disp_mag[i, j] = sqrt(ux^2 + uy^2)
+        end
+    end
+
+    # Function to draw the ellipse boundary
+    function ellipse_shape(cav, n=100)
+        t = range(0, 2π, length=n)
+        x = cav.a0 .* cos.(t)
+        y = cav.b0 .* sin.(t)
+        return Shape(x, y)
+    end
+
+    p_stress_2d = heatmap(xs_2d, ys_2d, sigma_vm,
+        aspect_ratio=:equal,
+        c=:viridis,
+        title="Von Mises Stress Field",
+        xlabel="x",
+        ylabel="y")
+    plot!(p_stress_2d, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="Cavity")
+
+    p_disp_2d = heatmap(xs_2d, ys_2d, disp_mag,
+        aspect_ratio=:equal,
+        c=:inferno,
+        title="Displacement Magnitude Field",
+        xlabel="x",
+        ylabel="y")
+    plot!(p_disp_2d, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="Cavity")
+
+    plot_2d = plot(p_stress_2d, p_disp_2d, layout=(1, 2), size=(1200, 500))
+    display(plot_2d)
+    println("2D field plots displayed.")
 run_example()
