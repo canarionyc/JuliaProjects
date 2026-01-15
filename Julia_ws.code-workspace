@@ -1,0 +1,12 @@
+{
+	"folders": [
+		{
+			"path": "."
+		}
+	],
+	"settings": {
+		"julia.environmentPath": "C:\\Users\\tglla\\.julia\\environments\\v1.10",
+		"julia.lint.run": true,
+		"terminal.integrated.shellIntegration.environmentReporting": true
+	}
+}
