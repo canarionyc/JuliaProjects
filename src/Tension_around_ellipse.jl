@@ -371,17 +371,27 @@ end
 # 6. Example Run (Figure 8 Params)
 # ==========================================
 
+# ==========================================
+# 6. Example Run (Figure 8 Params)
+# ==========================================
+
+# Helper function to calculate principal stresses and their angle
+function principal_stresses(sx, sy, txy)
+    avg = (sx + sy) / 2
+    r = sqrt(((sx - sy) / 2)^2 + txy^2)
+    s1 = avg + r
+    s2 = avg - r
+    # Angle of the principal stress s1
+    angle = 0.5 * atan(2 * txy, sx - sy)
+    return s1, s2, angle
+end
+
 function run_example()
     # Parameters from Figure 8 in the paper [Source 559-561]
-    # a0=5, b0=3, a1=5.1, b1=3.05 (units mm, but consistent units work)
-    # P1=500 kPa (x-axis), P2=250 kPa (y-axis)
-    # G=20 MPa = 20000 kPa, nu=0.4
-
     a0, b0 = 5.0, 3.0
     a1, b1 = 5.1, 3.05
     G_mod = 20000.0 # kPa
     nu = 0.4
-
     P1 = 500.0
     P2 = 250.0
     Lambda = 0.0 # P1 along x-axis
@@ -390,44 +400,11 @@ function run_example()
     material = ElasticMaterial(G_mod, nu, 3 - 4 * nu)
     stress = FarFieldStress(P1, P2, Lambda)
 
-    # Calculate Coefficients for Case 1 (Normal Displacement)
     println("Calculating Fourier Coefficients for Case 1...")
-    coeffs = calculate_coefficients(cavity, 1) # 1 for Normal
-
-    # --- 1D Plotting along X-axis (as before) ---
-    println("Calculating Stresses along X-axis for 1D plot...")
-    xs_1d = range(a0, 3 * a0, length=100)
-    sig_y_vals = Float64[]
-    u_x_vals = Float64[]
-    
-    for x in xs_1d
-        sx, sy, txy, ux, uy = solve_at_point(x, 0.0, cavity, material, stress, coeffs)
-        push!(sig_y_vals, sy)
-        push!(u_x_vals, ux)
-    end
-
-    p_stress_1d = plot(xs_1d ./ a0, sig_y_vals ./ P1,
-        label="σy / P1",
-        xlabel="x / a0",
-        ylabel="Stress Concentration",
-        title="Stress along x-axis",
-        lw=2)
-    hline!([stress.P2 / stress.P1], linestyle=:dash, label="P2/P1 (Far-field)")
-
-    p_disp_1d = plot(xs_1d ./ a0, u_x_vals ./ a0,
-        label="ux / a0",
-        xlabel="x / a0",
-        ylabel="Normalized Displacement",
-        title="Displacement along x-axis",
-        lw=2,
-        color=:red)
-
-    plot_1d = plot(p_stress_1d, p_disp_1d, layout=(2, 1), legend=:best)
-    display(plot_1d)
-    println("1D plots displayed. Now generating 2D field plots...")
+    coeffs = calculate_coefficients(cavity, 1)
 
     # --- 2D Field Plotting ---
-    grid_res = 100
+    grid_res = 50 # Resolution for heatmaps
     lim = 2.5 * a0
     xs_2d = range(-lim, lim, length=grid_res)
     ys_2d = range(-lim, lim, length=grid_res)
@@ -435,21 +412,49 @@ function run_example()
     sigma_vm = zeros(grid_res, grid_res)
     disp_mag = zeros(grid_res, grid_res)
 
+    # Data for quiver plots (on a sparser grid)
+    quiver_res = 15
+    xs_q = range(-lim, lim, length=quiver_res)
+    ys_q = range(-lim, lim, length=quiver_res)
+    ux_q = zeros(quiver_res, quiver_res)
+    uy_q = zeros(quiver_res, quiver_res)
+    s1_mag = zeros(quiver_res, quiver_res)
+    s1_ux = zeros(quiver_res, quiver_res)
+    s1_uy = zeros(quiver_res, quiver_res)
+
+
+    # --- Populate data for heatmaps ---
+    println("Generating data for 2D heatmaps...")
     for (i, y) in enumerate(ys_2d), (j, x) in enumerate(xs_2d)
         sx, sy, txy, ux, uy = solve_at_point(x, y, cavity, material, stress, coeffs)
-        
         if isnan(sx)
             sigma_vm[i, j] = NaN
             disp_mag[i, j] = NaN
         else
-            # Von Mises Stress
-            sigma_vm[i, j] = sqrt(sx^2 - sx*sy + sy^2 + 3*txy^2)
-            # Displacement Magnitude
+            sigma_vm[i, j] = sqrt(sx^2 - sx * sy + sy^2 + 3 * txy^2)
             disp_mag[i, j] = sqrt(ux^2 + uy^2)
         end
     end
 
-    # Function to draw the ellipse boundary
+    # --- Populate data for quiver plots ---
+    println("Generating data for 2D vector fields...")
+    for (i, y) in enumerate(ys_q), (j, x) in enumerate(xs_q)
+        sx, sy, txy, ux, uy = solve_at_point(x, y, cavity, material, stress, coeffs)
+        if !isnan(sx)
+            ux_q[i, j] = ux
+            uy_q[i, j] = uy
+
+            s1, s2, angle = principal_stresses(sx, sy, txy)
+            s1_mag[i, j] = s1
+            s1_ux[i, j] = cos(angle)
+            s1_uy[i, j] = sin(angle)
+        end
+    end
+
+    # --- Plotting ---
+    println("Creating plots...")
+
+    # Helper to draw ellipse
     function ellipse_shape(cav, n=100)
         t = range(0, 2π, length=n)
         x = cav.a0 .* cos.(t)
@@ -457,23 +462,42 @@ function run_example()
         return Shape(x, y)
     end
 
-    p_stress_2d = heatmap(xs_2d, ys_2d, sigma_vm,
-        aspect_ratio=:equal,
-        c=:viridis,
-        title="Von Mises Stress Field",
-        xlabel="x",
-        ylabel="y")
-    plot!(p_stress_2d, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="Cavity")
+    # 1. Von Mises Stress Heatmap
+    p_stress_hm = heatmap(xs_2d, ys_2d, sigma_vm, aspect_ratio=:equal, c=:viridis, title="Von Mises Stress", xlabel="x", ylabel="y", colorbar_title="kPa")
+    plot!(p_stress_hm, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="")
 
-    p_disp_2d = heatmap(xs_2d, ys_2d, disp_mag,
-        aspect_ratio=:equal,
-        c=:inferno,
-        title="Displacement Magnitude Field",
-        xlabel="x",
-        ylabel="y")
-    plot!(p_disp_2d, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="Cavity")
+    # 2. Displacement Magnitude Heatmap
+    p_disp_hm = heatmap(xs_2d, ys_2d, disp_mag, aspect_ratio=:equal, c=:inferno, title="Displacement Magnitude", xlabel="x", ylabel="y", colorbar_title="mm")
+    plot!(p_disp_hm, ellipse_shape(cavity), fillalpha=0, lw=2, linecolor=:white, label="")
 
-    plot_2d = plot(p_stress_2d, p_disp_2d, layout=(1, 2), size=(1200, 500))
-    display(plot_2d)
-    println("2D field plots displayed.")
+    # 3. Principal Stress Vector Field
+    p_stress_q = plot(aspect_ratio=:equal, title="Principal Stress (S1) Field", xlabel="x", ylabel="y", xlims=(-lim, lim), ylims=(-lim, lim))
+    quiver!(p_stress_q, vec(xs_q'), vec(ys_q'), quiver=(vec(s1_ux'), vec(s1_uy')), color=:black, lw=1, label="")
+    plot!(p_stress_q, ellipse_shape(cavity), fillalpha=0.5, fillcolor=:gray, lw=2, linecolor=:black, label="")
+
+    # 4. Displacement Vector Field
+    p_disp_q = plot(aspect_ratio=:equal, title="Displacement Vector Field", xlabel="x", ylabel="y", xlims=(-lim, lim), ylims=(-lim, lim))
+    quiver!(p_disp_q, vec(xs_q'), vec(ys_q'), quiver=(vec(ux_q'), vec(uy_q')), color=:blue, lw=1, label="")
+    plot!(p_disp_q, ellipse_shape(cavity), fillalpha=0.5, fillcolor=:gray, lw=2, linecolor=:black, label="")
+
+    # Add far-field stress arrows to vector plots
+    arrow_len = 0.2 * lim
+    for p in [p_stress_q, p_disp_q]
+        # P1 arrows (horizontal)
+        plot!(p, [-lim, -lim - arrow_len], [0, 0], arrow=true, color=:red, lw=2, label="")
+        plot!(p, [lim, lim + arrow_len], [0, 0], arrow=true, color=:red, lw=2, label="P1")
+        # P2 arrows (vertical)
+        plot!(p, [0, 0], [-lim, -lim - arrow_len], arrow=true, color=:green, lw=2, label="")
+        plot!(p, [0, 0], [lim, lim + arrow_len], arrow=true, color=:green, lw=2, label="P2")
+    end
+
+    # Combine all plots into a 2x2 grid
+    final_plot = plot(p_stress_hm, p_stress_q, p_disp_hm, p_disp_q, layout=(2, 2), size=(1200, 1000), legend=false)
+    display(final_plot)
+    println("All plots displayed.")
+end
+
+run_example()
+
+
 run_example()
