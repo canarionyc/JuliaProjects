@@ -1,0 +1,211 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+\documentclass[
+]{article}
+\usepackage{xcolor}
+\usepackage{amsmath,amssymb}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math} % this also loads fontspec
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+\usepackage{lmodern}
+\ifPDFTeX\else
+  % xetex/luatex font selection
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\newenvironment{Shaded}{}{}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.49,0.56,0.16}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\BuiltInTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{#1}}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.53,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.56,0.13,0.00}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.73,0.13,0.13}{\textit{#1}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{1.00,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.25,0.63,0.44}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.02,0.16,0.49}{#1}}
+\newcommand{\ImportTok}[1]{\textcolor[rgb]{0.00,0.50,0.00}{\textbf{#1}}}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.40,0.40,0.40}{#1}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.00,0.44,0.13}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.74,0.48,0.00}{#1}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.73,0.40,0.53}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.10,0.09,0.49}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.25,0.44,0.63}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.38,0.63,0.69}{\textbf{\textit{#1}}}}
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\usepackage{bookmark}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same}
+\hypersetup{
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\author{}
+\date{}
+
+\begin{document}
+
+The difference of exactly a factor of 1/2 arises because
+Julia\textquotesingle s \texttt{SingularIntegralEquations.jl} and the
+standard Mathematica \texttt{Integrate} function are using
+\textbf{different, but equally valid, definitions} of the Cauchy
+Transform.
+
+Your Mathematica code implements what I\textquotesingle ll call the
+\textbf{"Analyst\textquotesingle s Definition"}, which is the one you
+linked to earlier for the Kramers-Kronig relations:
+
+\[C_{\text{Ana}}[f](z) = \frac{1}{\pi i} \int \frac{f(t)}{t-z} \, dt\]
+
+Julia\textquotesingle s \texttt{SingularIntegralEquations.cauchy}
+function uses the \textbf{"Integral Equation Definition"} common in
+singular integral equation theory:
+
+\[C_{\text{IE}}[f](z) = \frac{1}{2\pi i} \int \frac{f(t)}{t-z} \, dt\]
+
+Therefore, the relation is simply:
+
+\[C_{\text{Ana}}[f](z) = 2 \times C_{\text{IE}}[f](z)\]
+
+Your results confirm this: \texttt{0.479351...} (Julia) is half of what
+Mathematica gives for the same calculation.
+
+\subsubsection{🧮 Why the Factor of 2 Matters: Connection to the
+Plemelj-Sokhotsky
+Formula}\label{ux1f9ee-why-the-factor-of-2-matters-connection-to-the-plemelj-sokhotsky-formula}
+
+The "Integral Equation Definition" (\(1/(2\pi i)\)) is often preferred
+when connecting to the \textbf{Plemelj-Sokhotsky formula}, which
+describes the limiting values of a Cauchy integral as you approach the
+real axis. It states:
+
+\[\lim_{\epsilon \to 0^+} \frac{1}{2\pi i} \int \frac{f(t)}{t - (x \pm i\epsilon)} \, dt = \pm \frac{1}{2} f(x) + \frac{1}{2\pi i} \text{P.V.} \int \frac{f(t)}{t - x} \, dt\]
+
+Here, the jump (the \texttt{±\ 1/2\ f(x)}) is nice and clean. The
+"Analyst\textquotesingle s Definition" would have a jump of
+\texttt{±\ f(x)}.
+
+\subsubsection{🔄 Adapting Your Codes for
+Consistency}\label{ux1f504-adapting-your-codes-for-consistency}
+
+You can easily make either code match the other\textquotesingle s
+convention.
+
+\textbf{1. To make Mathematica match the Julia result:}\\
+Simply multiply your Mathematica integral by \texttt{1/2}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{(* Mathematica code matching Julia\textquotesingle{}s cauchy(f, z) *)}
+\NormalTok{CauchyJulia}\OperatorTok{[}\AttributeTok{z\_}\OperatorTok{]} \ExtensionTok{:=} \FunctionTok{Integrate}\OperatorTok{[}\FunctionTok{Exp}\OperatorTok{[}\FunctionTok{t}\OperatorTok{]}\SpecialCharTok{/}\NormalTok{(}\FunctionTok{t} \SpecialCharTok{{-}} \FunctionTok{z}\NormalTok{)}\OperatorTok{,} \OperatorTok{\{}\FunctionTok{t}\OperatorTok{,} \SpecialCharTok{{-}}\DecValTok{1}\OperatorTok{,} \DecValTok{1}\OperatorTok{\}]} \SpecialCharTok{/}\NormalTok{ (}\DecValTok{2} \SpecialCharTok{*} \FunctionTok{Pi} \SpecialCharTok{*} \FunctionTok{I}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\textbf{2. To make Julia match your Mathematica result:}\\
+Multiply Julia\textquotesingle s result by \texttt{2}.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# Julia code matching your Mathematica definition}
+\NormalTok{C\_val\_analyst }\OperatorTok{=} \FloatTok{2} \OperatorTok{*} \FunctionTok{cauchy}\NormalTok{(f, z)}
+\CommentTok{\# This should now give: \textasciitilde{}0.958702... + 0.0539166...im}
+\end{Highlighting}
+\end{Shaded}
+
+\subsubsection{💡 Which One Should You
+Use?}\label{ux1f4a1-which-one-should-you-use}
+
+It depends on your field:
+
+\begin{itemize}
+\item
+  \textbf{Complex Analysis / Kramers-Kronig Relations}: Stick with the
+  \textbf{Analyst\textquotesingle s Definition} (\(1/(\pi i)\)). This is
+  standard in physics and optics.
+\item
+  \textbf{Singular Integral Equations / Fracture Mechanics}: The
+  \textbf{Integral Equation Definition} (\(1/(2\pi i)\)) is more common.
+  This is the world of the Kolosov-Muskhelishvili potentials we
+  discussed earlier.
+\end{itemize}
+
+The key is to be aware of the definition in the papers or textbooks you
+are following.
+
+\subsubsection{✅ Summary and
+Verification}\label{ux2705-summary-and-verification}
+
+You can quickly verify the relationship by checking the limiting value
+as \texttt{z} approaches the real axis. Using the Plemelj-Sokhotsky
+formula with Julia\textquotesingle s definition:
+
+\begin{itemize}
+\item
+  For \texttt{z\ -\textgreater{}\ x\ +\ i*0+} (from above), the real
+  part should approach \texttt{+1/2\ *\ f(x)}.
+\item
+  For \texttt{z\ -\textgreater{}\ x\ -\ i*0+} (from below), the real
+  part should approach \texttt{-1/2\ *\ f(x)}.
+\end{itemize}
+
+In summary, the \textbf{difference is not an error but a convention}.
+Once you account for the factor of 2, both codes are correct. For your
+engineering work in fracture mechanics (which heavily uses singular
+integrals), Julia\textquotesingle s built-in convention is likely the
+more direct one to use.
+
+If you are comparing results from different sources, always check which
+definition they use.
+
+\begin{Shaded}
+\begin{Highlighting}[]
+
+\end{Highlighting}
+\end{Shaded}
+
+%\include{Cauchy}
+\end{document}

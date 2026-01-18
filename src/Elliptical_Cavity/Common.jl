@@ -85,6 +85,8 @@ function calculate_field(x, y, cav, mat, stress, φ_func, ψ_func)
     # unless analytical dφ is provided.
     h = 1e-6
     val_φ = φ_func(ζ, cav, mat, stress)
+    val_ψ = ψ_func(ζ, cav, mat, stress)
+
     der_φ = (φ_func(ζ + h, cav, mat, stress) - φ_func(ζ - h, cav, mat, stress)) / (2h)
     der_ψ = (ψ_func(ζ + h, cav, mat, stress) - ψ_func(ζ - h, cav, mat, stress)) / (2h)
 
@@ -93,8 +95,8 @@ function calculate_field(x, y, cav, mat, stress, φ_func, ψ_func)
     # Kolmogorov-Muskhelishvili Stresses (in ζ plane)
     # Φ(ζ) = φ'(ζ) / ω'(ζ)
     # Ψ(ζ) = ψ'(ζ) / ω'(ζ)
-    Phi = der_φ / ω_prime
-    Psi = der_ψ / ω_prime
+    Phi_prime = der_φ / ω_prime
+    Psi_prime = der_ψ / ω_prime
 
     # σx + σy = 4 Re[Φ]
     # σy - σx + 2iτxy = 2 [ conj(ω(ζ))/ω'(ζ) * Φ'(ζ) + Ψ(ζ) ]
@@ -114,7 +116,7 @@ function calculate_field(x, y, cav, mat, stress, φ_func, ψ_func)
     der_Phi_z = dPhi_dzeta / ω_prime
 
     sum_s = 4 * real(Phi)
-    diff_s = 2 * ((conj(map_to_physical(ζ, cav)) / ω_prime) * dPhi_dzeta + Psi) # Check formula consistency
+    diff_s = 2 * ((conj(map_to_physical(ζ, cav)) / ω_prime) * der_φ + val_ψ) # Check formula consistency
 
     # Note: The term often is conj(ω)/ω' * dΦ/dζ. 
     # Let's stick to the form used in the previous solution for consistency.

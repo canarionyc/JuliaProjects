@@ -4,51 +4,46 @@ using LinearAlgebra
 using Printf
 
 # ==========================================
-# Analytical Solution (Inglis / Muskhelishvili)
+# Analytical Solution (Muskhelishvili / Inglis)
 # ==========================================
 
-"""
-    φ(ζ) for Traction Free Hole
-    
-    Γ = (P1+P2)/4
-    Γ' = -(P1-P2)/2 * exp(-2iΛ)
-    
-    Formula: φ(ζ) = Γ*R*ζ + Γ'*R/ζ
-"""
 function φ_traction_free(ζ, cav, mat, stress)
     P1, P2, Λ = stress.P1, stress.P2, stress.Λ
     R, m = cav.R, cav.m
-
+    
+    # Standard constants for far-field stresses P1, P2
     Γ = (P1 + P2) / 4.0
-    Γp = -(P1 - P2) / 2.0 * exp(-2im * Λ)
+    Γp = - (P1 - P2) / 2.0 * exp(-2im * Λ)
+    
+    # φ(ζ) = ΓRζ + (2Γ - conj(Γp)m) * R/ζ is for specific displacement BCs.
+    # For Traction-Free, φ(ζ) = ΓRζ + Γ'R/ζ
 
-    term1 = Γ * R * ζ
-    term2 = Γp * R / ζ
-
-    return term1 + term2
+    ret_val= Γ * R * ζ + (2 * Γ - conj(Γp) * m) * R / ζ
+    
+    return ret_val
 end
 
-"""
-    ψ(ζ) for Traction Free Hole
-    
-    Derived from boundary condition: φ + ω/ω' * conj(φ') + conj(ψ) = 0
-    
-    Formula from literature for stability:
-    ψ(ζ) = -Γ * (R/m) * (1/(ζ^2-m)) * (ζ - m/ζ) + 
-           conj(Γ') * R * (ζ - (1-m^2)/(ζ*(ζ^2-m)))
-"""
 function ψ_traction_free(ζ, cav, mat, stress)
     P1, P2, Λ = stress.P1, stress.P2, stress.Λ
     R, m = cav.R, cav.m
-
+    
     Γ = (P1 + P2) / 4.0
-    Γp = -(P1 - P2) / 2.0 * exp(-2im * Λ)
-
-    # This is a more stable formulation found in literature
-    term1 = -Γ * (R / m) * (1 / (ζ^2 - m)) * (ζ - m / ζ)
-    term2 = conj(Γp) * R * (ζ - (1 - m^2) / (ζ * (ζ^2 - m)))
-
-    return term1 + term2
+    Γp = - (P1 - P2) / 2.0 * exp(-2im * Λ)
+    
+    # Based on BC: ψ(ζ) = -conj(φ(1/ζ)) - [conj(ω(1/ζ))/ω'(ζ)] * φ'(ζ)
+    # Resulting in the standard form:
+    term1 = conj(Γp) * R * ζ
+    
+    # The interaction term is: - [ζ * (1 + m*ζ^2) / (ζ^2 - m)] * φ'(ζ)
+    dφ = Γ * R - Γp * R / (ζ^2)
+    interaction = - (ζ * (1 + m * ζ^2) / (ζ^2 - m)) * dφ
+    
+    # Far-field term for ψ is conj(Γ')Rζ. 
+    # The rest must vanish at infinity to satisfy far-field BC.
+    term2 = - (Γ + m * conj(Γp)) * R / ζ
+    
+    ret_val = term1 + term2 + interaction
+    return ret_val
 end
 
 # ==========================================
@@ -161,7 +156,7 @@ end
 
 function run_simulation()
     # 1. Geometry: Ellipse 2:1 ratio
-    a0 = 2.0
+    a0 = 1.0
     b0 = 1.0
     cav = Common.EllipticalCavity(a0, b0)
 

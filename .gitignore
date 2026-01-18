@@ -38,3 +38,8 @@ docs/site/
 /SingularIntegralEquations/src
 /SingularIntegralEquations/.github
 /SingularIntegralEquations/images
+*.nb
+*.aux
+*.log
+*.gz
+*.pdf
